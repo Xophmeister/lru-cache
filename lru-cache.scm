@@ -253,7 +253,7 @@
   (: lru-cache-keys (lru-cache-closure -> (list-of 'k)))
   (define (lru-cache-keys lru-cache) (lru-cache 'keys))
 
-  (: memoise/lru (forall (a b) ((a -> b) #!optional integer -> (a -> b))))
+  (: memoise/lru (procedure #!optional integer -> procedure))
   (define (memoise/lru proc #!optional (max-size 64))
     (let ((cache (make-lru-cache max-size)))
       (lambda args
