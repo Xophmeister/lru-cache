@@ -25,6 +25,7 @@
   (import scheme
           (chicken base)
           (chicken format)
+          (chicken type)
           (srfi 69)
           matchable)
 

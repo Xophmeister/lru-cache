@@ -8,3 +8,6 @@ lru-cache
 *.types
 *.build.sh
 *.install.sh
+
+# Nix build directory
+/result
