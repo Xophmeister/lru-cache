@@ -20,7 +20,13 @@
   ;; Exports
   (make-lru-cache
    lru-cache-size
-   lru-cache-capacity)
+   lru-cache-capacity
+   lru-cache-ref
+   lru-cache-set!
+   lru-cache-delete!
+   lru-cache-clear!
+   lru-cache-has-key?
+   lru-cache-keys)
 
   (import scheme
           (chicken base)
@@ -208,6 +214,9 @@
                            (set! head terminus)
                            (set! tail terminus))
 
+                         ; Does the cache have a given key
+                         (`(has-key? ,key) (has-node? key))
+
                          ; List of keys in MRU-to-LRU order
                          (`(keys) (dll-keys head))
 
@@ -216,7 +225,7 @@
 
         self)))
 
-  ;; TODO Public API
+  ;; Public API
 
   (: lru-cache-size (lru-cache-closure -> integer))
   (define (lru-cache-size lru-cache) (lru-cache 'size))
@@ -224,4 +233,26 @@
   (: lru-cache-capacity (lru-cache-closure -> integer))
   (define (lru-cache-capacity lru-cache) (lru-cache 'capacity))
 
+  (: lru-cache-ref (lru-cache-closure 'k #!rest procedure -> 'v))
+  (define lru-cache-ref
+    (case-lambda
+      ((lru-cache key) (lru-cache 'entry key))
+      ((lru-cache key thunk) (lru-cache 'entry key thunk))))
+
+  (: lru-cache-set! (lru-cache-closure 'k 'v -> void))
+  (define (lru-cache-set! lru-cache key value) (lru-cache 'set! key value))
+
+  (: lru-cache-delete! (lru-cache-closure 'k -> void))
+  (define (lru-cache-delete! lru-cache key) (lru-cache 'delete! key))
+
+  (: lru-cache-clear! (lru-cache-closure -> void))
+  (define (lru-cache-clear! lru-cache) (lru-cache 'clear!))
+
+  (: lru-cache-has-key? (lru-cache-closure 'k -> boolean))
+  (define (lru-cache-has-key? lru-cache key) (lru-cache 'has-key? key))
+
+  (: lru-cache-keys (lru-cache-closure -> (list-of 'k)))
+  (define (lru-cache-keys lru-cache) (lru-cache 'keys))
+
+  ; TODO procedure wrapper
   )
