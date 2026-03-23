@@ -47,13 +47,18 @@
 
           buildPhase = ''
             export CHICKEN_REPOSITORY_PATH="${mkRepoPath eggs}"
-            csc -s -J -O2 lru-cache.scm
+            csc -s -J -O2 -emit-types-file lru-cache.types lru-cache.scm
           '';
 
           installPhase = ''
             mkdir -p $out/lib/chicken/11
+
             cp lru-cache.so $out/lib/chicken/11/
             cp lru-cache.import.scm $out/lib/chicken/11/
+
+            if [[ -f lru-cache.types ]]; then
+              cp lru-cache.types $out/lib/chicken/11/
+            fi
           '';
         };
       in
