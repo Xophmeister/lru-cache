@@ -173,58 +173,56 @@
                                    ((_ . (previous . next))
                                      (hash-table-delete! cache key)
                                      (dll-set-next! (hash-table-ref cache previous) next)
-                                     (dll-set-previous! (hash-table-ref cache next) previous))))))
+                                     (dll-set-previous! (hash-table-ref cache next) previous)))))))
 
-               (self (lambda msg
-                       (match msg
-                         ; Size of the cache
-                         (`(size) (hash-table-size cache))
+               (lambda msg
+                 (match msg
+                   ; Size of the cache
+                   (`(size) (hash-table-size cache))
 
-                         ; Capacity of the cache
-                         (`(capacity) max-size)
+                   ; Capacity of the cache
+                   (`(capacity) max-size)
 
-                         ; Get cache entry
-                         (`(entry ,key)
-                           (if (has-node? key)
-                             (car (get-node! key))
-                             (error "no such key" key)))
+                   ; Get cache entry
+                   (`(entry ,key)
+                     (if (has-node? key)
+                       (car (get-node! key))
+                       (error "no such key" key)))
 
-                         ; Get cache entry, with fallback computation
-                         (`(entry ,key ,thunk)
-                           (if (has-node? key)
-                             (car (get-node! key))
-                             (let ((value (thunk)))
-                               (add-node! key value)
-                               value)))
+                   ; Get cache entry, with fallback computation
+                   (`(entry ,key ,thunk)
+                     (if (has-node? key)
+                       (car (get-node! key))
+                       (let ((value (thunk)))
+                         (add-node! key value)
+                         value)))
 
-                         ; Set a cache entry
-                         (`(set! ,key ,value)
-                           (if (has-node? key)
-                             (set-car! (get-node! key) value)
-                             (add-node! key value)))
+                   ; Set a cache entry
+                   (`(set! ,key ,value)
+                     (if (has-node? key)
+                       (set-car! (get-node! key) value)
+                       (add-node! key value)))
 
-                         ; Delete a cache entry by key
-                         (`(delete! ,key)
-                           (if (has-node? key)
-                             (remove-node! key)
-                             (error "no such key" key)))
+                   ; Delete a cache entry by key
+                   (`(delete! ,key)
+                     (if (has-node? key)
+                       (remove-node! key)
+                       (error "no such key" key)))
 
-                         ; Clear the cache
-                         (`(clear!)
-                           (hash-table-clear! cache)
-                           (set! head terminus)
-                           (set! tail terminus))
+                   ; Clear the cache
+                   (`(clear!)
+                     (hash-table-clear! cache)
+                     (set! head terminus)
+                     (set! tail terminus))
 
-                         ; Does the cache have a given key
-                         (`(has-key? ,key) (has-node? key))
+                   ; Does the cache have a given key
+                   (`(has-key? ,key) (has-node? key))
 
-                         ; List of keys in MRU-to-LRU order
-                         (`(keys) (dll-keys head))
+                   ; List of keys in MRU-to-LRU order
+                   (`(keys) (dll-keys head))
 
-                         ; Otherwise fail
-                         (_ (error "Unknown or invalid message"))))))
-
-        self)))
+                   ; Otherwise fail
+                   (_ (error "Unknown or invalid message")))))))
 
   ;; Public API
 
