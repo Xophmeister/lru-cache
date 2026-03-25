@@ -27,7 +27,10 @@
    lru-cache-clear!
    lru-cache-has-key?
    lru-cache-for-each
+   lru-cache-fold
+   lru-cache->alist
    lru-cache-keys
+   lru-cache-values
    memoise/lru)
 
   (import scheme
@@ -247,13 +250,27 @@
   (: lru-cache-for-each (lru-cache-closure ('k 'v -> *) -> void))
   (define (lru-cache-for-each lru-cache proc) (lru-cache 'for-each proc))
 
+  (: lru-cache-fold (lru-cache-closure ('k 'v 'a -> 'a) 'a -> 'a))
+  (define (lru-cache-fold lru-cache proc init)
+    (let ((acc init))
+      (lru-cache-for-each lru-cache
+        (lambda (key value) (set! acc (proc key value acc))))
+
+      acc))
+
+  (: lru-cache->alist (lru-cache-closure -> (list-of (pair 'k 'v))))
+  (define (lru-cache->alist lru-cache)
+    (reverse (lru-cache-fold lru-cache
+               (lambda (key value acc) (cons `(,key . ,value) acc))
+               '())))
+
   (: lru-cache-keys (lru-cache-closure -> (list-of 'k)))
   (define (lru-cache-keys lru-cache)
-    (let ((result '()))
-      (lru-cache-for-each lru-cache
-        (lambda (key _) (set! result (cons key result))))
+    (map car (lru-cache->alist lru-cache)))
 
-      (reverse result)))
+  (: lru-cache-values (lru-cache-closure -> (list-of 'k)))
+  (define (lru-cache-values lru-cache)
+    (map cdr (lru-cache->alist lru-cache)))
 
   ; TODO Turn this into a macro to support recursive functions
   (: memoise/lru (procedure #!optional integer -> procedure))
