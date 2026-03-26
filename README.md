@@ -119,6 +119,12 @@ to least recently used. Does not affect the access ordering.
 
 ### Memoisation
 
+#### `(define-memoised/lru [capacity] (name arg ...) body ...)`
+
+Defines a top-level procedure `name`, with its argument list and body
+definition per usual, but return values are cached based on the
+arguments (compared as a list). `capacity` defaults to 64.
+
 #### `(memoise/lru proc [capacity])`
 
 Returns a new procedure that caches the results of calling `proc`.
@@ -126,7 +132,8 @@ Arguments are used as the cache key (compared as a list). `capacity`
 defaults to 64.
 
 **Note:** For recursive procedures, the memoised version must replace
-the original binding for recursive calls to benefit from caching:
+the original binding for recursive calls to benefit from caching. It is
+better to use `define-memoised/lru` in such cases, wherever possible.
 
 ``` scheme
 (define (fib n)
@@ -141,7 +148,8 @@ the original binding for recursive calls to benefit from caching:
 ## Examples
 
 ``` scheme
-(import lru-cache)
+(import lru-cache
+        (chicken format))
 
 ;; Create a cache with capacity 3
 (define cache (make-lru-cache 3))
@@ -151,7 +159,7 @@ the original binding for recursive calls to benefit from caching:
 (lru-cache-set! cache 'b 2)
 (lru-cache-set! cache 'c 3)
 
-(lru-cache-keys cache)    ; => (c b a)
+(lru-cache-keys cache)  ; => (c b a)
 
 ;; Accessing an entry promotes it
 (lru-cache-ref cache 'a)  ; => 1
@@ -159,7 +167,7 @@ the original binding for recursive calls to benefit from caching:
 
 ;; Adding a fourth entry evicts the LRU
 (lru-cache-set! cache 'd 4)
-(lru-cache-keys cache)    ; => (d a c)
+(lru-cache-keys cache)        ; => (d a c)
 (lru-cache-has-key? cache 'b) ; => #f
 
 ;; Using a thunk for cache-or-compute
@@ -167,12 +175,15 @@ the original binding for recursive calls to benefit from caching:
   (lambda () (+ 40 2)))   ; => 42
 
 ;; Memoisation
-(define (slow-square x)
-  (begin (print "computing...") (* x x)))
-(define fast-square (memoise/lru slow-square))
+(define-memoised/lru (fib n)
+  (printf "computing fib ~A~N" n)
+  (cond
+    ((= n 0) 1)
+    ((= n 1) 1)
+    (else (+ (fib (- n 1)) (fib (- n 2))))))
 
-(fast-square 5)  ; prints "computing...", returns 25
-(fast-square 5)  ; returns 25, no print
+(fib 5)  ; prints "computing fib 5" .. "computing fib 0", returns 8
+(fib 5)  ; returns 8, no printing
 ```
 
 ## License

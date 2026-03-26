@@ -31,6 +31,7 @@
    lru-cache->alist
    lru-cache-keys
    lru-cache-values
+   define-memoised/lru
    memoise/lru)
 
   (import scheme
@@ -272,7 +273,26 @@
   (define (lru-cache-values lru-cache)
     (map cdr (lru-cache->alist lru-cache)))
 
-  ; TODO Turn this into a macro to support recursive functions
+  (define-syntax define-memoised/lru
+    (syntax-rules ()
+      ; Default capacity
+      ((_ (name arg ...) body ...)
+       (define name
+         (let ((cache (make-lru-cache)))
+           (lambda (arg ...)
+             (lru-cache-ref cache
+                            (list arg ...)
+                            (lambda () body ...))))))
+
+      ; Explicit capacity
+      ((_ capacity (name arg ...) body ...)
+       (define name
+         (let ((cache (make-lru-cache capacity)))
+           (lambda (arg ...)
+             (lru-cache-ref cache
+                            (list arg ...)
+                            (lambda () body ...))))))))
+
   (: memoise/lru (procedure #!optional integer -> procedure))
   (define (memoise/lru proc #!optional (max-size 64))
     (let ((cache (make-lru-cache max-size)))

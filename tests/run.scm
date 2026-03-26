@@ -140,22 +140,37 @@
 
     (test "alist" '((bar . 2) (foo . 1)) (lru-cache->alist cache)))
 
-  (test-group "memoise"
+  (test-group "memoise (default capacity)"
     (define counter 0)
-    (define (fib n)
+    (define-memoised/lru (fib n)
       (set! counter (+ counter 1))
       (cond
         ((= n 0) 1)
         ((= n 1) 1)
         (else (+ (fib (- n 1)) (fib (- n 2))))))
 
-    (set! fib (memoise/lru fib))
-
     (test "memoised function returns correct results"
           '(1 1 2 3 5) (map fib (iota 5)))
 
     (test "memoised function reuses cached results instead of recomputing"
           5 counter))
+
+  (test-group "memoise (defined capacity)"
+    (define counter 0)
+    (define-memoised/lru 2 (fib n)
+      (set! counter (+ counter 1))
+      (cond
+        ((= n 0) 1)
+        ((= n 1) 1)
+        (else (+ (fib (- n 1)) (fib (- n 2))))))
+
+    (test "memoised function returns correct results"
+          '(1 1 2 3 5) (map fib (iota 5)))
+
+    ; The smaller capacity means more cache misses
+    ; NOTE Evaluation order is not guaranteed, so this _may_ be flaky.
+    (test "memoised function reuses cached results instead of recomputing"
+          8 counter))
 
   (test-group "delete and clear"
     (define cache (make-lru-cache))
